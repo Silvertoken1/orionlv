@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     stockist.status = status
+// Triggering rebuild on Vercel
 
     return NextResponse.json({
       message: `Stockist ${status} successfully`,
