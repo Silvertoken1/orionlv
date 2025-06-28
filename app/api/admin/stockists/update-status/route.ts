@@ -1,3 +1,6 @@
+// Set runtime to nodejs to avoid Edge Runtime issues with synchronous operations
+export const runtime = "nodejs"
+
 import { type NextRequest, NextResponse } from "next/server"
 import { verifyToken } from "@/lib/auth"
 import { getDatabase } from "@/lib/db"
