@@ -1,56 +1,50 @@
 #!/bin/bash
 
-echo "🚀 Deploying Bright Orion MLM System to Production..."
+echo "🚀 Deploying Bright Orion MLM System to GitHub..."
 
-# Check if we're in a git repository
+# Check if git is initialized
 if [ ! -d ".git" ]; then
-    echo "❌ Not a git repository. Please run 'git init' first."
-    exit 1
+    echo "Initializing git repository..."
+    git init
 fi
 
-# Add all changes
-echo "📁 Adding all changes..."
+# Add all files
+echo "📁 Adding all files..."
 git add .
 
 # Check if there are changes to commit
 if git diff --staged --quiet; then
-    echo "ℹ️ No changes to commit."
-else
-    # Commit changes
-    echo "💾 Committing changes..."
-    git commit -m "Deploy: Production database setup with Neon PostgreSQL
-
-- Complete Neon database integration
-- Production-ready authentication system
-- Full MLM system with users, commissions, pins
-- Admin dashboard with real-time stats
-- Stockist management system
-- Sample data for testing
-- Environment variables configuration
-- Database initialization endpoint"
+    echo "⚠️  No changes to commit"
+    exit 0
 fi
 
-# Push to GitHub
-echo "🔄 Pushing to GitHub..."
-git push origin main
+# Commit with timestamp
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+echo "💾 Committing changes..."
+git commit -m "Production deployment: Complete MLM system with Neon database - $TIMESTAMP"
 
-echo "✅ Successfully deployed to GitHub!"
+# Push to GitHub
+echo "🌐 Pushing to GitHub..."
+if git remote get-url origin > /dev/null 2>&1; then
+    git push origin main
+else
+    echo "❌ No remote origin found. Please add your GitHub repository:"
+    echo "git remote add origin https://github.com/yourusername/your-repo.git"
+    echo "git push -u origin main"
+    exit 1
+fi
+
+echo "✅ Deployment completed successfully!"
 echo ""
-echo "🔧 Next Steps for Vercel Deployment:"
-echo "1. Go to https://vercel.com and import your GitHub repository"
-echo "2. Add these environment variables in Vercel dashboard:"
-echo "   - DATABASE_URL (your Neon PostgreSQL connection string)"
-echo "   - JWT_SECRET (generate a secure 32+ character string)"
-echo "   - ADMIN_EMAIL (your admin email)"
-echo "   - ADMIN_PASSWORD (secure admin password)"
-echo "   - INIT_SECRET (secret key for database initialization)"
+echo "🔧 Next steps:"
+echo "1. Set up Neon database (see NEON-DATABASE-SETUP.md)"
+echo "2. Add environment variables to Vercel"
+echo "3. Deploy to Vercel"
+echo "4. Initialize database with /api/init-production"
 echo ""
-echo "3. After deployment, initialize the database by calling:"
-echo "   POST https://your-app.vercel.app/api/init-production"
-echo "   Body: { \"authorization\": \"your-init-secret\" }"
-echo ""
-echo "4. Test login with these credentials:"
-echo "   Admin: admin@brightorian.com / BrightAdmin2024!"
-echo "   User: john.doe@brightorian.com / BrightUser2024!"
-echo ""
-echo "🎉 Your MLM system is ready for production!"
+echo "🎯 Environment variables needed:"
+echo "- DATABASE_URL (from Neon)"
+echo "- JWT_SECRET (32+ characters)"
+echo "- INIT_SECRET (for database init)"
+echo "- PAYSTACK_PUBLIC_KEY (provided)"
+echo "- PAYSTACK_SECRET_KEY (provided)"

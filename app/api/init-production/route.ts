@@ -1,30 +1,30 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { initializeNeonDatabase } from "@/lib/db/neon"
-
-export const dynamic = "force-dynamic"
+import { createTables, seedDatabase } from "@/lib/db/neon"
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if this is a production initialization request
-    const { authorization } = await request.json()
+    const body = await request.json()
 
-    // Simple authorization check (you can make this more secure)
-    if (authorization !== process.env.INIT_SECRET) {
+    // Simple authorization check
+    if (body.authorization !== process.env.INIT_SECRET) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    console.log("🚀 Starting production database initialization...")
+    console.log("🚀 Initializing production database...")
 
-    const result = await initializeNeonDatabase()
+    // Create tables
+    await createTables()
+
+    // Seed with sample data
+    await seedDatabase()
 
     return NextResponse.json({
       success: true,
-      message: "Production database initialized successfully!",
-      data: result,
+      message: "Production database initialized successfully",
+      timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("❌ Production database initialization failed:", error)
-
+    console.error("❌ Database initialization error:", error)
     return NextResponse.json(
       {
         error: "Database initialization failed",
@@ -33,11 +33,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
-}
-
-export async function GET() {
-  return NextResponse.json({
-    message: "Production database initialization endpoint",
-    instructions: "Send POST request with authorization token to initialize database",
-  })
 }

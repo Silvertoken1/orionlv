@@ -132,15 +132,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs">
-            <p className="font-semibold mb-2">Test Accounts:</p>
-            <p>
-              <strong>Admin:</strong> admin@brightorian.com / Admin123!
-            </p>
-            <p>
-              <strong>User:</strong> john.doe@brightorian.com / User123!
-            </p>
-          </div>
+          
         </CardContent>
       </Card>
     </div>
