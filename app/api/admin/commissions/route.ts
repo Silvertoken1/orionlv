@@ -1,33 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAllCommissions, updateCommissionStatus } from "@/lib/database"
+import { getTokenFromRequest, verifyToken } from "@/lib/auth"
 
-// Force dynamic rendering
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
     // Get token from request
-    const authHeader = request.headers.get("authorization")
-    const cookieToken = request.cookies.get("auth-token")?.value
-
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : cookieToken
-
+    const token = getTokenFromRequest(request)
     if (!token) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Verify token and check admin status
-    const jwt = require("jsonwebtoken")
-    const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this-in-production"
-
-    let payload
-    try {
-      payload = jwt.verify(token, JWT_SECRET)
-    } catch (error) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
-
-    if (!payload.isAdmin) {
+    // Verify token
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.isAdmin) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })
     }
 
@@ -46,27 +33,14 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     // Get token from request
-    const authHeader = request.headers.get("authorization")
-    const cookieToken = request.cookies.get("auth-token")?.value
-
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : cookieToken
-
+    const token = getTokenFromRequest(request)
     if (!token) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Verify token and check admin status
-    const jwt = require("jsonwebtoken")
-    const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this-in-production"
-
-    let payload
-    try {
-      payload = jwt.verify(token, JWT_SECRET)
-    } catch (error) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
-
-    if (!payload.isAdmin) {
+    // Verify token
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.isAdmin) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })
     }
 

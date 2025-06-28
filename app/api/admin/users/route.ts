@@ -1,79 +1,118 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/auth"
 import { getAllUsers, updateUser } from "@/lib/database"
+import { getTokenFromRequest, verifyToken } from "@/lib/auth"
+
+export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin(request)
-    const users = getAllUsers()
+    // Get token from request
+    const token = getTokenFromRequest(request)
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
+    // Verify token
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.isAdmin) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 })
+    }
+
+    const users = await getAllUsers()
+
+    // Remove sensitive information
     const safeUsers = users.map((user) => ({
       id: user.id,
+      memberId: user.memberId,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,
-      memberId: user.memberId,
       sponsorId: user.sponsorId,
-      role: user.role,
-      status: user.status,
-      balance: user.balance,
-      totalEarnings: user.totalEarnings,
+      isActive: user.isActive,
+      isAdmin: user.isAdmin,
       createdAt: user.createdAt,
+      totalEarnings: user.totalEarnings,
+      pendingEarnings: user.pendingEarnings,
+      withdrawnEarnings: user.withdrawnEarnings,
     }))
 
     return NextResponse.json({
       users: safeUsers,
-      stats: {
-        total: users.length,
-        active: users.filter((u) => u.status === "active").length,
-        inactive: users.filter((u) => u.status === "inactive").length,
-        suspended: users.filter((u) => u.status === "suspended").length,
-        admins: users.filter((u) => u.role === "admin").length,
-      },
+      total: safeUsers.length,
     })
   } catch (error) {
     console.error("Get users error:", error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal server error" },
-      { status: error instanceof Error && error.message.includes("required") ? 401 : 500 },
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   try {
-    await requireAdmin(request)
-    const { id, ...updates } = await request.json()
-
-    if (!id) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+    // Get token from request
+    const token = getTokenFromRequest(request)
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const updatedUser = updateUser(id, updates)
+    // Verify token
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.isAdmin) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { userId, updates } = body
+
+    if (!userId || !updates) {
+      return NextResponse.json({ error: "User ID and updates are required" }, { status: 400 })
+    }
+
+    // Prevent updating sensitive fields
+    const allowedUpdates = {
+      isActive: updates.isActive,
+      firstName: updates.firstName,
+      lastName: updates.lastName,
+      phone: updates.phone,
+    }
+
+    // Remove undefined values
+    Object.keys(allowedUpdates).forEach((key) => {
+      if (allowedUpdates[key as keyof typeof allowedUpdates] === undefined) {
+        delete allowedUpdates[key as keyof typeof allowedUpdates]
+      }
+    })
+
+    const updatedUser = await updateUser(userId, allowedUpdates)
+
     if (!updatedUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
+    // Remove sensitive information
+    const safeUser = {
+      id: updatedUser.id,
+      memberId: updatedUser.memberId,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      phone: updatedUser.phone,
+      sponsorId: updatedUser.sponsorId,
+      isActive: updatedUser.isActive,
+      isAdmin: updatedUser.isAdmin,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+      totalEarnings: updatedUser.totalEarnings,
+      pendingEarnings: updatedUser.pendingEarnings,
+      withdrawnEarnings: updatedUser.withdrawnEarnings,
+    }
+
     return NextResponse.json({
       message: "User updated successfully",
-      user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        memberId: updatedUser.memberId,
-        role: updatedUser.role,
-        status: updatedUser.status,
-        balance: updatedUser.balance,
-        totalEarnings: updatedUser.totalEarnings,
-      },
+      user: safeUser,
     })
   } catch (error) {
     console.error("Update user error:", error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal server error" },
-      { status: error instanceof Error && error.message.includes("required") ? 401 : 500 },
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

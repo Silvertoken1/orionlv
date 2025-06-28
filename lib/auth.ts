@@ -32,7 +32,7 @@ export const getTokenFromRequest = (request: NextRequest): string | null => {
   }
 
   // Try to get token from cookies
-  const tokenFromCookie = request.cookies.get("auth-token")?.value
+  const tokenFromCookie = request.cookies.get("auth-token")?.value || request.cookies.get("token")?.value
   if (tokenFromCookie) {
     return tokenFromCookie
   }

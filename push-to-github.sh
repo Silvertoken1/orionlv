@@ -1,10 +1,10 @@
 #!/bin/bash
 
-echo "🚀 Pushing Bright Orion MLM System to GitHub..."
+echo "🚀 Starting GitHub deployment..."
 
 # Check if we're in a git repository
 if [ ! -d ".git" ]; then
-    echo "❌ Not a git repository. Please run 'git init' first."
+    echo "❌ Error: Not a git repository. Please run 'git init' first."
     exit 1
 fi
 
@@ -23,17 +23,16 @@ TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Commit with timestamp
 echo "💾 Committing changes..."
-git commit -m "Update: Fix dynamic server usage error and mobile image display - $TIMESTAMP"
+git commit -m "Update: Fix dynamic server usage errors and complete database system - $TIMESTAMP"
 
 # Push to GitHub
-echo "⬆️  Pushing to GitHub..."
+echo "🌐 Pushing to GitHub..."
 if git push origin main; then
     echo "✅ Successfully pushed to GitHub!"
-    echo "🌐 Your changes are now live on GitHub."
+    echo "🎉 Your changes are now live on GitHub!"
 else
     echo "❌ Failed to push to GitHub. Please check your connection and try again."
-    echo "💡 You might need to run: git push -u origin main"
     exit 1
 fi
 
-echo "🎉 Deployment complete!"
+echo "🔗 Visit your repository to see the changes."
