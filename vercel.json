@@ -1,9 +1,7 @@
 {
-  "version": 2,
-  "regions": ["iad1"],
   "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30
+    "api/**/*.ts": {
+      "runtime": "nodejs18.x"
     }
   }
 }
