@@ -3,19 +3,20 @@ import bcrypt from "bcryptjs"
 // Types
 export interface User {
   id: string
+  memberId: string
   email: string
   password: string
   firstName: string
   lastName: string
   phone: string
-  memberId: string
   sponsorId?: string
-  role: "admin" | "user"
-  status: "active" | "inactive" | "suspended"
-  balance: number
-  totalEarnings: number
+  isActive: boolean
+  isAdmin: boolean
   createdAt: Date
   updatedAt: Date
+  totalEarnings: number
+  pendingEarnings: number
+  withdrawnEarnings: number
 }
 
 export interface Commission {
@@ -26,313 +27,407 @@ export interface Commission {
   level: number
   type: "registration" | "matrix" | "bonus"
   status: "pending" | "approved" | "rejected"
-  description: string
   createdAt: Date
   updatedAt: Date
+  description: string
+}
+
+export interface ActivationPin {
+  id: string
+  pin: string
+  isUsed: boolean
+  usedBy?: string
+  createdAt: Date
+  usedAt?: Date
+  amount: number
 }
 
 export interface Payment {
   id: string
   userId: string
   amount: number
-  type: "registration" | "upgrade" | "withdrawal"
-  status: "pending" | "completed" | "failed"
   reference: string
-  description: string
+  status: "pending" | "success" | "failed"
+  paymentMethod: string
   createdAt: Date
   updatedAt: Date
 }
 
-export interface ActivationPin {
-  id: string
-  pin: string
-  amount: number
-  status: "active" | "used" | "expired"
-  usedBy?: string
-  createdBy: string
-  createdAt: Date
-  usedAt?: Date
-}
-
-export interface Stockist {
-  id: string
-  email: string
-  password: string
-  firstName: string
-  lastName: string
-  phone: string
-  businessName: string
-  address: string
-  city: string
-  state: string
-  status: "pending" | "approved" | "suspended"
-  stockLevel: number
-  totalSales: number
-  commission: number
-  createdAt: Date
-  updatedAt: Date
-}
-
-// In-memory database
-const database = {
-  users: new Map<string, User>(),
-  commissions: new Map<string, Commission>(),
-  payments: new Map<string, Payment>(),
-  activationPins: new Map<string, ActivationPin>(),
-  stockists: new Map<string, Stockist>(),
-}
+// In-memory storage
+let users: User[] = []
+let commissions: Commission[] = []
+let activationPins: ActivationPin[] = []
+const payments: Payment[] = []
 
 // Initialize with sample data
-async function initializeDatabase() {
-  if (database.users.size > 0) return
+const initializeData = () => {
+  if (users.length === 0) {
+    console.log("🚀 Initializing database with sample data...")
 
-  const adminPassword = await bcrypt.hash("Admin123!", 10)
-  const userPassword = await bcrypt.hash("User123!", 10)
+    try {
+      // Create admin user with proper password hashing
+      const adminPassword = bcrypt.hashSync("Admin123!", 10)
+      const userPassword = bcrypt.hashSync("User123!", 10)
 
-  // Admin user
-  const admin: User = {
-    id: "admin-1",
-    email: "admin@brightorian.com",
-    password: adminPassword,
-    firstName: "Admin",
-    lastName: "User",
-    phone: "+2348123456789",
-    memberId: "ADM001",
-    role: "admin",
-    status: "active",
-    balance: 0,
-    totalEarnings: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+      const adminUser: User = {
+        id: "admin-001",
+        memberId: "BO000001",
+        email: "admin@brightorian.com",
+        password: adminPassword,
+        firstName: "System",
+        lastName: "Administrator",
+        phone: "+2348123456789",
+        isActive: true,
+        isAdmin: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalEarnings: 0,
+        pendingEarnings: 0,
+        withdrawnEarnings: 0,
+      }
+
+      const sampleUser: User = {
+        id: "user-001",
+        memberId: "BO000002",
+        email: "john.doe@brightorian.com",
+        password: userPassword,
+        firstName: "John",
+        lastName: "Doe",
+        phone: "+2348123456790",
+        sponsorId: "admin-001",
+        isActive: true,
+        isAdmin: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalEarnings: 25000,
+        pendingEarnings: 8000,
+        withdrawnEarnings: 17000,
+      }
+
+      const testUser2: User = {
+        id: "user-002",
+        memberId: "BO000003",
+        email: "jane.smith@brightorian.com",
+        password: userPassword,
+        firstName: "Jane",
+        lastName: "Smith",
+        phone: "+2348123456791",
+        sponsorId: "user-001",
+        isActive: true,
+        isAdmin: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalEarnings: 12000,
+        pendingEarnings: 3000,
+        withdrawnEarnings: 9000,
+      }
+
+      const testUser3: User = {
+        id: "user-003",
+        memberId: "BO000004",
+        email: "mike.johnson@brightorian.com",
+        password: userPassword,
+        firstName: "Mike",
+        lastName: "Johnson",
+        phone: "+2348123456792",
+        sponsorId: "user-001",
+        isActive: true,
+        isAdmin: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalEarnings: 8500,
+        pendingEarnings: 2500,
+        withdrawnEarnings: 6000,
+      }
+
+      users = [adminUser, sampleUser, testUser2, testUser3]
+
+      console.log("✅ Sample users created successfully:")
+      console.log("👤 Admin:", adminUser.email, "/ Admin123!")
+      console.log("👤 User 1:", sampleUser.email, "/ User123!")
+      console.log("👤 User 2:", testUser2.email, "/ User123!")
+      console.log("👤 User 3:", testUser3.email, "/ User123!")
+
+      // Test password verification
+      const testAdmin = bcrypt.compareSync("Admin123!", adminPassword)
+      const testUser = bcrypt.compareSync("User123!", userPassword)
+      console.log("🔑 Password verification test - Admin:", testAdmin, "User:", testUser)
+    } catch (error) {
+      console.error("❌ Error initializing users:", error)
+    }
+
+    // Create sample activation pins
+    activationPins = [
+      {
+        id: "pin-001",
+        pin: "BRIGHT2024001",
+        isUsed: false,
+        amount: 36000,
+        createdAt: new Date(),
+      },
+      {
+        id: "pin-002",
+        pin: "BRIGHT2024002",
+        isUsed: true,
+        usedBy: "user-001",
+        amount: 36000,
+        createdAt: new Date(),
+        usedAt: new Date(),
+      },
+      {
+        id: "pin-003",
+        pin: "BRIGHT2024003",
+        isUsed: false,
+        amount: 36000,
+        createdAt: new Date(),
+      },
+    ]
+
+    // Create sample commissions
+    commissions = [
+      {
+        id: "comm-001",
+        userId: "admin-001",
+        fromUserId: "user-001",
+        amount: 4000,
+        level: 1,
+        type: "registration",
+        status: "approved",
+        description: "Level 1 commission from John Doe registration",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "comm-002",
+        userId: "user-001",
+        fromUserId: "user-002",
+        amount: 4000,
+        level: 1,
+        type: "registration",
+        status: "approved",
+        description: "Level 1 commission from Jane Smith registration",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
+
+    console.log("✅ Database initialization complete")
+    console.log("📊 Stats:", {
+      users: users.length,
+      pins: activationPins.length,
+      commissions: commissions.length,
+    })
   }
-
-  // Regular user
-  const user: User = {
-    id: "user-1",
-    email: "john.doe@brightorian.com",
-    password: userPassword,
-    firstName: "John",
-    lastName: "Doe",
-    phone: "+2348123456790",
-    memberId: "USR001",
-    sponsorId: "admin-1",
-    role: "user",
-    status: "active",
-    balance: 5000,
-    totalEarnings: 15000,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-
-  database.users.set(admin.id, admin)
-  database.users.set(user.id, user)
-
-  // Sample commission
-  const commission: Commission = {
-    id: "comm-1",
-    userId: "user-1",
-    fromUserId: "user-2",
-    amount: 2500,
-    level: 1,
-    type: "registration",
-    status: "approved",
-    description: "Registration commission from new member",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-
-  database.commissions.set(commission.id, commission)
-
-  // Sample payment
-  const payment: Payment = {
-    id: "pay-1",
-    userId: "user-1",
-    amount: 10000,
-    type: "registration",
-    status: "completed",
-    reference: "REF123456789",
-    description: "Registration payment",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-
-  database.payments.set(payment.id, payment)
-
-  // Sample activation pin
-  const pin: ActivationPin = {
-    id: "pin-1",
-    pin: "PIN123456",
-    amount: 10000,
-    status: "active",
-    createdBy: "admin-1",
-    createdAt: new Date(),
-  }
-
-  database.activationPins.set(pin.id, pin)
 }
 
-// Initialize database
-initializeDatabase()
-
-// Database instance
-export const db = database
-
-// Get database function
-export function getDatabase() {
-  return database
-}
-
-// User functions
-export async function createUser(userData: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> {
-  const id = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  const user: User = {
-    ...userData,
-    id,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-  database.users.set(id, user)
-  return user
-}
-
-export function findUserByEmail(email: string): User | undefined {
-  return Array.from(database.users.values()).find((user) => user.email === email)
-}
-
-export function findUserById(id: string): User | undefined {
-  return database.users.get(id)
-}
-
-export function findUserByMemberId(memberId: string): User | undefined {
-  return Array.from(database.users.values()).find((user) => user.memberId === memberId)
-}
-
-export function updateUser(id: string, updates: Partial<User>): User | null {
-  const user = database.users.get(id)
-  if (!user) return null
-
-  const updatedUser = { ...user, ...updates, updatedAt: new Date() }
-  database.users.set(id, updatedUser)
-  return updatedUser
-}
-
-export function getAllUsers(): User[] {
-  return Array.from(database.users.values())
-}
-
-// Commission functions
-export function createCommission(commissionData: Omit<Commission, "id" | "createdAt" | "updatedAt">): Commission {
-  const id = `comm-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  const commission: Commission = {
-    ...commissionData,
-    id,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-  database.commissions.set(id, commission)
-  return commission
-}
-
-export function findCommissionsByUserId(userId: string): Commission[] {
-  return Array.from(database.commissions.values()).filter((comm) => comm.userId === userId)
-}
-
-export function updateCommissionStatus(id: string, status: Commission["status"]): Commission | null {
-  const commission = database.commissions.get(id)
-  if (!commission) return null
-
-  const updatedCommission = { ...commission, status, updatedAt: new Date() }
-  database.commissions.set(id, updatedCommission)
-  return updatedCommission
-}
-
-export function getAllCommissions(): Commission[] {
-  return Array.from(database.commissions.values())
-}
-
-// Payment functions
-export function createPayment(paymentData: Omit<Payment, "id" | "createdAt" | "updatedAt">): Payment {
-  const id = `pay-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  const payment: Payment = {
-    ...paymentData,
-    id,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-  database.payments.set(id, payment)
-  return payment
-}
-
-export function findPaymentsByUserId(userId: string): Payment[] {
-  return Array.from(database.payments.values()).filter((payment) => payment.userId === userId)
-}
-
-export function getAllPayments(): Payment[] {
-  return Array.from(database.payments.values())
-}
-
-// Activation Pin functions
-export function createActivationPin(pinData: Omit<ActivationPin, "id" | "createdAt">): ActivationPin {
-  const id = `pin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  const pin: ActivationPin = {
-    ...pinData,
-    id,
-    createdAt: new Date(),
-  }
-  database.activationPins.set(id, pin)
-  return pin
-}
-
-export function findActivationPinByPin(pin: string): ActivationPin | undefined {
-  return Array.from(database.activationPins.values()).find((p) => p.pin === pin)
-}
-
-export function getAllActivationPins(): ActivationPin[] {
-  return Array.from(database.activationPins.values())
-}
-
-// Stockist functions
-export function createStockist(stockistData: Omit<Stockist, "id" | "createdAt" | "updatedAt">): Stockist {
-  const id = `stockist-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  const stockist: Stockist = {
-    ...stockistData,
-    id,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-  database.stockists.set(id, stockist)
-  return stockist
-}
-
-export function findStockistByEmail(email: string): Stockist | undefined {
-  return Array.from(database.stockists.values()).find((stockist) => stockist.email === email)
-}
-
-export function getAllStockists(): Stockist[] {
-  return Array.from(database.stockists.values())
-}
-
-export function updateStockist(id: string, updates: Partial<Stockist>): Stockist | null {
-  const stockist = database.stockists.get(id)
-  if (!stockist) return null
-
-  const updatedStockist = { ...stockist, ...updates, updatedAt: new Date() }
-  database.stockists.set(id, updatedStockist)
-  return updatedStockist
-}
-
-// Utility functions
-export async function hashPassword(password: string): Promise<string> {
+// Hash password function
+export const hashPassword = async (password: string): Promise<string> => {
   return bcrypt.hash(password, 10)
 }
 
-export async function comparePassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash)
+// Verify password function
+export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
+  try {
+    const result = await bcrypt.compare(password, hashedPassword)
+    console.log("🔐 Password comparison result:", result)
+    return result
+  } catch (error) {
+    console.error("❌ Password verification error:", error)
+    return false
+  }
 }
 
-// Export collections for direct access
-export const users = database.users
-export const commissions = database.commissions
-export const payments = database.payments
-export const activationPins = database.activationPins
-export const stockists = database.stockists
+// User functions
+export const createUser = async (userData: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> => {
+  initializeData()
+
+  const user: User = {
+    ...userData,
+    id: `user-${Date.now()}`,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+
+  users.push(user)
+  console.log("✅ New user created:", user.email)
+  return user
+}
+
+export const findUserByEmail = async (email: string): Promise<User | null> => {
+  initializeData()
+  const normalizedEmail = email.toLowerCase().trim()
+  const user = users.find((user) => user.email.toLowerCase() === normalizedEmail)
+  console.log("🔍 Finding user by email:", normalizedEmail, "Found:", !!user)
+  return user || null
+}
+
+export const findUserById = async (id: string): Promise<User | null> => {
+  initializeData()
+  return users.find((user) => user.id === id) || null
+}
+
+export const findUserByMemberId = async (memberId: string): Promise<User | null> => {
+  initializeData()
+  return users.find((user) => user.memberId === memberId) || null
+}
+
+export const updateUser = async (id: string, updates: Partial<User>): Promise<User | null> => {
+  initializeData()
+  const userIndex = users.findIndex((user) => user.id === id)
+  if (userIndex === -1) return null
+
+  users[userIndex] = {
+    ...users[userIndex],
+    ...updates,
+    updatedAt: new Date(),
+  }
+
+  return users[userIndex]
+}
+
+export const getAllUsers = async (): Promise<User[]> => {
+  initializeData()
+  return users
+}
+
+// Commission functions
+export const createCommission = async (
+  commissionData: Omit<Commission, "id" | "createdAt" | "updatedAt">,
+): Promise<Commission> => {
+  initializeData()
+
+  const commission: Commission = {
+    ...commissionData,
+    id: `comm-${Date.now()}`,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+
+  commissions.push(commission)
+  return commission
+}
+
+export const getCommissionsByUserId = async (userId: string): Promise<Commission[]> => {
+  initializeData()
+  return commissions.filter((commission) => commission.userId === userId)
+}
+
+export const getAllCommissions = async (): Promise<Commission[]> => {
+  initializeData()
+  return commissions
+}
+
+export const updateCommissionStatus = async (id: string, status: Commission["status"]): Promise<Commission | null> => {
+  initializeData()
+  const commissionIndex = commissions.findIndex((commission) => commission.id === id)
+  if (commissionIndex === -1) return null
+
+  commissions[commissionIndex] = {
+    ...commissions[commissionIndex],
+    status,
+    updatedAt: new Date(),
+  }
+
+  return commissions[commissionIndex]
+}
+
+// Activation Pin functions
+export const createActivationPin = async (pinData: Omit<ActivationPin, "id" | "createdAt">): Promise<ActivationPin> => {
+  initializeData()
+
+  const pin: ActivationPin = {
+    ...pinData,
+    id: `pin-${Date.now()}`,
+    createdAt: new Date(),
+  }
+
+  activationPins.push(pin)
+  return pin
+}
+
+export const findActivationPin = async (pin: string): Promise<ActivationPin | null> => {
+  initializeData()
+  return activationPins.find((p) => p.pin === pin) || null
+}
+
+export const useActivationPin = async (pin: string, userId: string): Promise<ActivationPin | null> => {
+  initializeData()
+  const pinIndex = activationPins.findIndex((p) => p.pin === pin && !p.isUsed)
+  if (pinIndex === -1) return null
+
+  activationPins[pinIndex] = {
+    ...activationPins[pinIndex],
+    isUsed: true,
+    usedBy: userId,
+    usedAt: new Date(),
+  }
+
+  return activationPins[pinIndex]
+}
+
+export const getAllActivationPins = async (): Promise<ActivationPin[]> => {
+  initializeData()
+  return activationPins
+}
+
+// Payment functions
+export const createPayment = async (paymentData: Omit<Payment, "id" | "createdAt" | "updatedAt">): Promise<Payment> => {
+  initializeData()
+
+  const payment: Payment = {
+    ...paymentData,
+    id: `pay-${Date.now()}`,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+
+  payments.push(payment)
+  return payment
+}
+
+export const findPaymentByReference = async (reference: string): Promise<Payment | null> => {
+  initializeData()
+  return payments.find((payment) => payment.reference === reference) || null
+}
+
+export const updatePaymentStatus = async (id: string, status: Payment["status"]): Promise<Payment | null> => {
+  initializeData()
+  const paymentIndex = payments.findIndex((payment) => payment.id === id)
+  if (paymentIndex === -1) return null
+
+  payments[paymentIndex] = {
+    ...payments[paymentIndex],
+    status,
+    updatedAt: new Date(),
+  }
+
+  return payments[paymentIndex]
+}
+
+// Statistics functions
+export const getStats = async () => {
+  initializeData()
+
+  const totalUsers = users.length
+  const activeUsers = users.filter((user) => user.isActive).length
+  const totalCommissions = commissions.reduce((sum, comm) => sum + comm.amount, 0)
+  const pendingCommissions = commissions.filter((comm) => comm.status === "pending").length
+  const approvedCommissions = commissions.filter((comm) => comm.status === "approved").length
+  const totalPins = activationPins.length
+  const usedPins = activationPins.filter((pin) => pin.isUsed).length
+  const availablePins = totalPins - usedPins
+
+  return {
+    totalUsers,
+    activeUsers,
+    totalCommissions,
+    pendingCommissions,
+    approvedCommissions,
+    totalPins,
+    usedPins,
+    availablePins,
+  }
+}
+
+// Initialize data on module load
+initializeData()

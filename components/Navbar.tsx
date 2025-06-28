@@ -81,16 +81,16 @@ export default function Navbar() {
           <Link href="/" className="flex items-center space-x-3">
             <div className="relative w-10 h-10 md:w-12 md:h-12">
               <Image
-                src="/placeholder.svg?height=48&width=48"
-                alt="Bright Orion Logo"
+                src="/placeholder1.svg?height=48&width=48"
+                alt=""
                 fill
                 className="object-contain rounded-lg"
                 priority
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl md:text-2xl font-bold text-[#0066E0]">Bright Orion</span>
-              <span className="text-xs text-gray-500 hidden md:block">MLM Platform</span>
+              <span className="text-xl md:text-2xl font-bold text-[#0066E0]"></span>
+              <span className="text-xs text-gray-500 hidden md:block"></span>
             </div>
           </Link>
 
@@ -181,13 +181,13 @@ export default function Navbar() {
                   <SheetTitle className="flex items-center space-x-3">
                     <div className="relative w-8 h-8">
                       <Image
-                        src="/placeholder.svg?height=32&width=32"
-                        alt="Bright Orion Logo"
+                        src="/placeholder2.svg?height=32&width=32"
+                        alt=""
                         fill
                         className="object-contain rounded"
                       />
                     </div>
-                    <span className="text-[#0066E0] font-bold">Bright Orion</span>
+                    <span className="text-[#0066E0] font-bold"></span>
                   </SheetTitle>
                 </SheetHeader>
 
