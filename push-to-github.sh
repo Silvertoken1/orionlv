@@ -1,10 +1,10 @@
 #!/bin/bash
 
-echo "🚀 Starting GitHub deployment process..."
+echo "🚀 Pushing Bright Orion MLM System to GitHub..."
 
 # Check if we're in a git repository
 if [ ! -d ".git" ]; then
-    echo "❌ Error: Not a git repository. Please run 'git init' first."
+    echo "❌ Not a git repository. Please run 'git init' first."
     exit 1
 fi
 
@@ -18,26 +18,22 @@ if git diff --staged --quiet; then
     exit 0
 fi
 
-# Get current timestamp
+# Get current timestamp for commit message
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Commit with timestamp
 echo "💾 Committing changes..."
-git commit -m "Update: Mobile image fixes and responsive design improvements - $TIMESTAMP"
+git commit -m "Update: Fix dynamic server usage error and mobile image display - $TIMESTAMP"
 
 # Push to GitHub
-echo "🌐 Pushing to GitHub..."
+echo "⬆️  Pushing to GitHub..."
 if git push origin main; then
     echo "✅ Successfully pushed to GitHub!"
-    echo "🎉 Your changes are now live on GitHub!"
+    echo "🌐 Your changes are now live on GitHub."
 else
-    echo "❌ Failed to push to GitHub. Trying to set upstream..."
-    if git push -u origin main; then
-        echo "✅ Successfully pushed to GitHub with upstream set!"
-    else
-        echo "❌ Failed to push. Please check your GitHub repository settings."
-        exit 1
-    fi
+    echo "❌ Failed to push to GitHub. Please check your connection and try again."
+    echo "💡 You might need to run: git push -u origin main"
+    exit 1
 fi
 
-echo "🔗 You can now deploy to Vercel or other platforms!"
+echo "🎉 Deployment complete!"

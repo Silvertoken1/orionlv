@@ -7,30 +7,31 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
-    domains: ["placeholder.svg", "via.placeholder.com", "picsum.photos"],
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "plus.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "unsplash.com",
+      },
       {
         protocol: "https",
         hostname: "**",
       },
-      {
-        protocol: "http",
-        hostname: "**",
-      },
     ],
+    formats: ["image/webp", "image/avif"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    formats: ["image/webp", "image/avif"],
+    unoptimized: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ["better-sqlite3"],
-  },
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals.push("better-sqlite3")
-    }
-    return config
+    serverComponentsExternalPackages: ["bcryptjs"],
   },
 }
 

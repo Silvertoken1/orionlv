@@ -82,66 +82,48 @@ export default function HomePage() {
 
             {/* Right Content - Hero Image */}
             <div className="relative">
-              <div className="hero-image-container shadow-2xl">
+              <div className="image-container mobile-hero-image shadow-2xl">
                 <Image
-                  src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80"
+                  src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
                   alt="Bright Orion Success Story"
-                  width={600}
-                  height={400}
-                  className="rounded-lg"
+                  fill
+                  className="mobile-responsive-image"
                   priority
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
                     target.style.display = "none"
-                    const fallback = target.nextElementSibling as HTMLElement
-                    if (fallback) fallback.style.display = "flex"
+                    const fallback = target.parentElement?.querySelector(".image-fallback")
+                    if (fallback) {
+                      ;(fallback as HTMLElement).style.display = "flex"
+                    }
                   }}
                 />
                 <div className="image-fallback" style={{ display: "none" }}>
-                  <TrendingUp className="image-fallback-icon" />
-                  <div className="image-fallback-text">Success Awaits</div>
-                  <div className="image-fallback-subtext">Join thousands earning daily</div>
+                  <div className="text-center">
+                    <TrendingUp className="w-16 h-16 mb-4 mx-auto" />
+                    <h3 className="text-xl font-bold mb-2">Success Awaits</h3>
+                    <p className="text-sm opacity-90">Join the Bright Orion Community</p>
+                  </div>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
 
-              {/* Desktop Floating Cards */}
-              <div className="floating-cards-desktop">
-                <div className="absolute -top-4 -left-4 bg-white p-4 rounded-xl shadow-lg border">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">Live Earnings</span>
-                  </div>
-                  <p className="text-lg font-bold text-green-600">₦2,450,000</p>
+              {/* Floating Cards */}
+              <div className="absolute -top-4 -left-4 md:-top-6 md:-left-6 bg-white p-3 md:p-4 rounded-xl shadow-lg border floating-card-top">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs md:text-sm font-medium">Live Earnings</span>
                 </div>
-
-                <div className="absolute -bottom-4 -right-4 bg-white p-4 rounded-xl shadow-lg border">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium">New Members</span>
-                  </div>
-                  <p className="text-lg font-bold text-blue-600">+127 Today</p>
-                </div>
+                <p className="text-sm md:text-lg font-bold text-green-600">₦2,450,000</p>
               </div>
 
-              {/* Mobile Floating Cards */}
-              <div className="floating-cards-mobile">
-                <div className="floating-card bg-white p-3 rounded-lg shadow-lg border flex-1">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs font-medium">Live Earnings</span>
-                  </div>
-                  <p className="text-sm font-bold text-green-600">₦2,450,000</p>
+              <div className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 bg-white p-3 md:p-4 rounded-xl shadow-lg border floating-card-bottom">
+                <div className="flex items-center space-x-2">
+                  <Users className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                  <span className="text-xs md:text-sm font-medium">New Members</span>
                 </div>
-
-                <div className="floating-card bg-white p-3 rounded-lg shadow-lg border flex-1">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-3 h-3 text-blue-600" />
-                    <span className="text-xs font-medium">New Members</span>
-                  </div>
-                  <p className="text-sm font-bold text-blue-600">+127 Today</p>
-                </div>
+                <p className="text-sm md:text-lg font-bold text-blue-600">+127 Today</p>
               </div>
             </div>
           </div>
