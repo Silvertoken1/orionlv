@@ -110,3 +110,54 @@
   transform: translateY(-5px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
+
+/* Mobile Image Fixes */
+@media (max-width: 768px) {
+  .mobile-hero-image {
+    min-height: 250px !important;
+    background: linear-gradient(135deg, #0066e0 0%, #00266c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-responsive-image {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    object-fit: cover !important;
+  }
+}
+
+/* Responsive containers */
+.image-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.image-container::before {
+  content: "";
+  display: block;
+  padding-bottom: 60%; /* 5:3 aspect ratio */
+}
+
+.image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Fallback for when images don't load */
+.image-fallback {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-weight: 500;
+}
