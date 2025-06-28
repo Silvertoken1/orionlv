@@ -53,114 +53,108 @@ export interface Payment {
   updatedAt: Date
 }
 
-export interface Stockist {
-  id: string
-  userId: string
-  businessName: string
-  businessAddress: string
-  businessPhone: string
-  businessEmail: string
-  bankName: string
-  accountNumber: string
-  accountName: string
-  status: "pending" | "approved" | "rejected"
-  createdAt: Date
-  updatedAt: Date
-}
-
 // In-memory storage
 let users: User[] = []
 let commissions: Commission[] = []
 let activationPins: ActivationPin[] = []
 const payments: Payment[] = []
-let stockists: Stockist[] = []
 
 // Initialize with sample data
 const initializeData = () => {
   if (users.length === 0) {
     console.log("🚀 Initializing database with sample data...")
 
-    // Create admin user
-    const adminUser: User = {
-      id: "admin-001",
-      memberId: "BO000001",
-      email: process.env.ADMIN_EMAIL || "admin@brightorian.com",
-      password: bcrypt.hashSync(process.env.ADMIN_PASSWORD || "Admin123!", 10),
-      firstName: "System",
-      lastName: "Administrator",
-      phone: process.env.ADMIN_PHONE || "+2348123456789",
-      isActive: true,
-      isAdmin: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      totalEarnings: 0,
-      pendingEarnings: 0,
-      withdrawnEarnings: 0,
+    try {
+      // Create admin user with proper password hashing
+      const adminPassword = bcrypt.hashSync("Admin123!", 10)
+      const userPassword = bcrypt.hashSync("User123!", 10)
+
+      const adminUser: User = {
+        id: "admin-001",
+        memberId: "BO000001",
+        email: "admin@brightorian.com",
+        password: adminPassword,
+        firstName: "System",
+        lastName: "Administrator",
+        phone: "+2348123456789",
+        isActive: true,
+        isAdmin: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalEarnings: 0,
+        pendingEarnings: 0,
+        withdrawnEarnings: 0,
+      }
+
+      const sampleUser: User = {
+        id: "user-001",
+        memberId: "BO000002",
+        email: "john.doe@brightorian.com",
+        password: userPassword,
+        firstName: "John",
+        lastName: "Doe",
+        phone: "+2348123456790",
+        sponsorId: "admin-001",
+        isActive: true,
+        isAdmin: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalEarnings: 25000,
+        pendingEarnings: 8000,
+        withdrawnEarnings: 17000,
+      }
+
+      const testUser2: User = {
+        id: "user-002",
+        memberId: "BO000003",
+        email: "jane.smith@brightorian.com",
+        password: userPassword,
+        firstName: "Jane",
+        lastName: "Smith",
+        phone: "+2348123456791",
+        sponsorId: "user-001",
+        isActive: true,
+        isAdmin: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalEarnings: 12000,
+        pendingEarnings: 3000,
+        withdrawnEarnings: 9000,
+      }
+
+      const testUser3: User = {
+        id: "user-003",
+        memberId: "BO000004",
+        email: "mike.johnson@brightorian.com",
+        password: userPassword,
+        firstName: "Mike",
+        lastName: "Johnson",
+        phone: "+2348123456792",
+        sponsorId: "user-001",
+        isActive: true,
+        isAdmin: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalEarnings: 8500,
+        pendingEarnings: 2500,
+        withdrawnEarnings: 6000,
+      }
+
+      users = [adminUser, sampleUser, testUser2, testUser3]
+
+      console.log("✅ Sample users created successfully:")
+      console.log("👤 Admin:", adminUser.email, "/ Admin123!")
+      console.log("👤 User 1:", sampleUser.email, "/ User123!")
+      console.log("👤 User 2:", testUser2.email, "/ User123!")
+      console.log("👤 User 3:", testUser3.email, "/ User123!")
+
+      // Test password verification
+      const testAdmin = bcrypt.compareSync("Admin123!", adminPassword)
+      const testUser = bcrypt.compareSync("User123!", userPassword)
+      console.log("🔑 Password verification test - Admin:", testAdmin, "User:", testUser)
+    } catch (error) {
+      console.error("❌ Error initializing users:", error)
     }
-
-    // Create sample user with properly hashed password
-    const sampleUser: User = {
-      id: "user-001",
-      memberId: "BO000002",
-      email: "john.doe@brightorian.com",
-      password: bcrypt.hashSync("User123!", 10),
-      firstName: "John",
-      lastName: "Doe",
-      phone: "+2348123456790",
-      sponsorId: "admin-001",
-      isActive: true,
-      isAdmin: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      totalEarnings: 25000,
-      pendingEarnings: 8000,
-      withdrawnEarnings: 17000,
-    }
-
-    // Create additional test users
-    const testUser2: User = {
-      id: "user-002",
-      memberId: "BO000003",
-      email: "jane.smith@brightorian.com",
-      password: bcrypt.hashSync("User123!", 10),
-      firstName: "Jane",
-      lastName: "Smith",
-      phone: "+2348123456791",
-      sponsorId: "user-001",
-      isActive: true,
-      isAdmin: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      totalEarnings: 12000,
-      pendingEarnings: 3000,
-      withdrawnEarnings: 9000,
-    }
-
-    const testUser3: User = {
-      id: "user-003",
-      memberId: "BO000004",
-      email: "mike.johnson@brightorian.com",
-      password: bcrypt.hashSync("User123!", 10),
-      firstName: "Mike",
-      lastName: "Johnson",
-      phone: "+2348123456792",
-      sponsorId: "user-001",
-      isActive: true,
-      isAdmin: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      totalEarnings: 8500,
-      pendingEarnings: 2500,
-      withdrawnEarnings: 6000,
-    }
-
-    users = [adminUser, sampleUser, testUser2, testUser3]
-
-    console.log("✅ Sample users created:")
-    console.log("👤 Admin:", adminUser.email, "/ Admin123!")
-    console.log("👤 User 1:", sampleUser.email, "/ User123!")
-    console.log("👤 User 2:", testUser2.email, "/ User123!")
-    console.log("👤 User 3:", testUser3.email, "/ User123!")
 
     // Create sample activation pins
     activationPins = [
@@ -183,20 +177,6 @@ const initializeData = () => {
       {
         id: "pin-003",
         pin: "BRIGHT2024003",
-        isUsed: false,
-        amount: 36000,
-        createdAt: new Date(),
-      },
-      {
-        id: "pin-004",
-        pin: "BRIGHT2024004",
-        isUsed: false,
-        amount: 36000,
-        createdAt: new Date(),
-      },
-      {
-        id: "pin-005",
-        pin: "BRIGHT2024005",
         isUsed: false,
         amount: 36000,
         createdAt: new Date(),
@@ -229,62 +209,6 @@ const initializeData = () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-      {
-        id: "comm-003",
-        userId: "user-001",
-        fromUserId: "user-003",
-        amount: 4000,
-        level: 1,
-        type: "registration",
-        status: "pending",
-        description: "Level 1 commission from Mike Johnson registration",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: "comm-004",
-        userId: "admin-001",
-        fromUserId: "user-002",
-        amount: 2000,
-        level: 2,
-        type: "registration",
-        status: "approved",
-        description: "Level 2 commission from Jane Smith registration",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]
-
-    // Create sample stockists
-    stockists = [
-      {
-        id: "stockist-001",
-        userId: "user-001",
-        businessName: "John's Electronics Store",
-        businessAddress: "123 Lagos Street, Victoria Island, Lagos",
-        businessPhone: "+2348123456790",
-        businessEmail: "john.electronics@gmail.com",
-        bankName: "First Bank",
-        accountNumber: "1234567890",
-        accountName: "John Doe",
-        status: "approved",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: "stockist-002",
-        userId: "user-002",
-        businessName: "Jane's Tech Hub",
-        businessAddress: "456 Abuja Road, Garki, FCT",
-        businessPhone: "+2348123456791",
-        businessEmail: "jane.techhub@gmail.com",
-        bankName: "GTBank",
-        accountNumber: "0987654321",
-        accountName: "Jane Smith",
-        status: "pending",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
     ]
 
     console.log("✅ Database initialization complete")
@@ -292,7 +216,6 @@ const initializeData = () => {
       users: users.length,
       pins: activationPins.length,
       commissions: commissions.length,
-      stockists: stockists.length,
     })
   }
 }
@@ -304,7 +227,14 @@ export const hashPassword = async (password: string): Promise<string> => {
 
 // Verify password function
 export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
-  return bcrypt.compare(password, hashedPassword)
+  try {
+    const result = await bcrypt.compare(password, hashedPassword)
+    console.log("🔐 Password comparison result:", result)
+    return result
+  } catch (error) {
+    console.error("❌ Password verification error:", error)
+    return false
+  }
 }
 
 // User functions
@@ -325,7 +255,10 @@ export const createUser = async (userData: Omit<User, "id" | "createdAt" | "upda
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
   initializeData()
-  return users.find((user) => user.email === email) || null
+  const normalizedEmail = email.toLowerCase().trim()
+  const user = users.find((user) => user.email.toLowerCase() === normalizedEmail)
+  console.log("🔍 Finding user by email:", normalizedEmail, "Found:", !!user)
+  return user || null
 }
 
 export const findUserById = async (id: string): Promise<User | null> => {
@@ -471,42 +404,6 @@ export const updatePaymentStatus = async (id: string, status: Payment["status"])
   return payments[paymentIndex]
 }
 
-// Stockist functions
-export const createStockist = async (
-  stockistData: Omit<Stockist, "id" | "createdAt" | "updatedAt">,
-): Promise<Stockist> => {
-  initializeData()
-
-  const stockist: Stockist = {
-    ...stockistData,
-    id: `stockist-${Date.now()}`,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-
-  stockists.push(stockist)
-  return stockist
-}
-
-export const getAllStockists = async (): Promise<Stockist[]> => {
-  initializeData()
-  return stockists
-}
-
-export const updateStockistStatus = async (id: string, status: Stockist["status"]): Promise<Stockist | null> => {
-  initializeData()
-  const stockistIndex = stockists.findIndex((stockist) => stockist.id === id)
-  if (stockistIndex === -1) return null
-
-  stockists[stockistIndex] = {
-    ...stockists[stockistIndex],
-    status,
-    updatedAt: new Date(),
-  }
-
-  return stockists[stockistIndex]
-}
-
 // Statistics functions
 export const getStats = async () => {
   initializeData()
@@ -519,8 +416,6 @@ export const getStats = async () => {
   const totalPins = activationPins.length
   const usedPins = activationPins.filter((pin) => pin.isUsed).length
   const availablePins = totalPins - usedPins
-  const totalStockists = stockists.length
-  const approvedStockists = stockists.filter((stockist) => stockist.status === "approved").length
 
   return {
     totalUsers,
@@ -531,8 +426,6 @@ export const getStats = async () => {
     totalPins,
     usedPins,
     availablePins,
-    totalStockists,
-    approvedStockists,
   }
 }
 
