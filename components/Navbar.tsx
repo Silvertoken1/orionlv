@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { Button } from "./ui/button"
 import {
   Menu,
   User,
@@ -25,8 +25,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+} from "./ui/dropdown-menu"
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+} from "./ui/sheet"
 
 export default function Navbar() {
   const [user, setUser] = useState<any>(null)
@@ -34,34 +40,25 @@ export default function Navbar() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check for logged in user
-    const checkAuth = () => {
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("auth-token")
-        const userData = localStorage.getItem("user-data")
+    const token = localStorage.getItem("auth-token")
+    const userData = localStorage.getItem("user-data")
 
-        if (token && userData) {
-          try {
-            setUser(JSON.parse(userData))
-          } catch (error) {
-            console.error("Error parsing user data:", error)
-            localStorage.removeItem("auth-token")
-            localStorage.removeItem("user-data")
-          }
-        }
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData))
+      } catch (error) {
+        console.error("Error parsing user data:", error)
+        localStorage.removeItem("auth-token")
+        localStorage.removeItem("user-data")
       }
     }
-
-    checkAuth()
   }, [])
 
   const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("auth-token")
-      localStorage.removeItem("user-data")
-      setUser(null)
-      router.push("/")
-    }
+    localStorage.removeItem("auth-token")
+    localStorage.removeItem("user-data")
+    setUser(null)
+    router.push("/")
   }
 
   const menuItems = [
@@ -77,24 +74,22 @@ export default function Navbar() {
     <nav className="bg-white shadow-lg sticky top-0 z-50 border-b">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-3">
-          {/* Logo Section */}
           <Link href="/" className="flex items-center space-x-3">
             <div className="relative w-10 h-10 md:w-12 md:h-12">
               <Image
-                src="/placeholder1.svg?height=48&width=48"
-                alt=""
+                src="/placeholder1.svg"
+                alt="Logo"
                 fill
                 className="object-contain rounded-lg"
                 priority
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl md:text-2xl font-bold text-[#0066E0]"></span>
-              <span className="text-xs text-gray-500 hidden md:block"></span>
+              <span className="text-xl md:text-2xl font-bold text-[#0066E0]">Bright Orion</span>
+              <span className="text-xs text-gray-500 hidden md:block">Empowering Generations</span>
             </div>
           </Link>
 
-          {/* Desktop Menu */}
           <div className="hidden lg:flex items-center space-x-6">
             {menuItems.map((item) => (
               <Link
@@ -116,9 +111,7 @@ export default function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">
-                      {user.firstName} {user.lastName}
-                    </p>
+                    <p className="text-sm font-medium">{user.firstName} {user.lastName}</p>
                     <p className="text-xs text-gray-500">{user.email}</p>
                     <p className="text-xs text-blue-600">{user.memberId}</p>
                   </div>
@@ -168,7 +161,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu */}
           <div className="lg:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
@@ -181,18 +174,17 @@ export default function Navbar() {
                   <SheetTitle className="flex items-center space-x-3">
                     <div className="relative w-8 h-8">
                       <Image
-                        src="/placeholder2.svg?height=32&width=32"
-                        alt=""
+                        src="/placeholder2.svg"
+                        alt="Logo"
                         fill
                         className="object-contain rounded"
                       />
                     </div>
-                    <span className="text-[#0066E0] font-bold"></span>
+                    <span className="text-[#0066E0] font-bold">Bright Orion</span>
                   </SheetTitle>
                 </SheetHeader>
 
                 <div className="mt-8 space-y-4">
-                  {/* User Info Section */}
                   {user && (
                     <div className="bg-blue-50 p-4 rounded-lg mb-6">
                       <div className="flex items-center space-x-3">
@@ -200,9 +192,7 @@ export default function Navbar() {
                           <User className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">
-                            {user.firstName} {user.lastName}
-                          </p>
+                          <p className="font-medium text-gray-900">{user.firstName} {user.lastName}</p>
                           <p className="text-sm text-gray-500">{user.email}</p>
                           <p className="text-xs text-blue-600">{user.memberId}</p>
                         </div>
@@ -210,57 +200,36 @@ export default function Navbar() {
                     </div>
                   )}
 
-                  {/* Navigation Links */}
                   <div className="space-y-2">
-                    {menuItems.map((item) => {
-                      const Icon = item.icon
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                          <Icon className="h-5 w-5 text-gray-600" />
-                          <span className="font-medium text-gray-700">{item.label}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-
-                  {/* User Actions */}
-                  {user ? (
-                    <div className="space-y-2 pt-4 border-t">
+                    {menuItems.map(({ href, label, icon: Icon }) => (
                       <Link
-                        href="/dashboard"
+                        key={href}
+                        href={href}
                         onClick={() => setIsOpen(false)}
                         className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                       >
+                        <Icon className="h-5 w-5 text-gray-600" />
+                        <span className="font-medium text-gray-700">{label}</span>
+                      </Link>
+                    ))}
+                  </div>
+
+                  {user ? (
+                    <div className="space-y-2 pt-4 border-t">
+                      <Link href="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100">
                         <BarChart3 className="h-5 w-5 text-gray-600" />
                         <span className="font-medium text-gray-700">Dashboard</span>
                       </Link>
-                      <Link
-                        href="/profile"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
+                      <Link href="/profile" onClick={() => setIsOpen(false)} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100">
                         <Settings className="h-5 w-5 text-gray-600" />
                         <span className="font-medium text-gray-700">Profile Settings</span>
                       </Link>
-                      <Link
-                        href="/stockist/register"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
+                      <Link href="/stockist/register" onClick={() => setIsOpen(false)} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100">
                         <Store className="h-5 w-5 text-gray-600" />
                         <span className="font-medium text-gray-700">Become Stockist</span>
                       </Link>
                       {user.role === "admin" && (
-                        <Link
-                          href="/admin"
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
+                        <Link href="/admin" onClick={() => setIsOpen(false)} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100">
                           <Settings className="h-5 w-5 text-gray-600" />
                           <span className="font-medium text-gray-700">Admin Panel</span>
                         </Link>
@@ -270,10 +239,10 @@ export default function Navbar() {
                           handleLogout()
                           setIsOpen(false)
                         }}
-                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-50 transition-colors w-full text-left"
+                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-50 text-red-600 w-full"
                       >
-                        <LogOut className="h-5 w-5 text-red-600" />
-                        <span className="font-medium text-red-600">Logout</span>
+                        <LogOut className="h-5 w-5" />
+                        <span className="font-medium">Logout</span>
                       </button>
                     </div>
                   ) : (
@@ -281,11 +250,7 @@ export default function Navbar() {
                       <Button variant="outline" asChild className="w-full" onClick={() => setIsOpen(false)}>
                         <Link href="/auth/login">Login</Link>
                       </Button>
-                      <Button
-                        className="w-full bg-[#0066E0] hover:bg-[#00266C]"
-                        asChild
-                        onClick={() => setIsOpen(false)}
-                      >
+                      <Button className="w-full bg-[#0066E0] hover:bg-[#00266C]" asChild onClick={() => setIsOpen(false)}>
                         <Link href="/auth/register">Register</Link>
                       </Button>
                     </div>
