@@ -1,55 +1,43 @@
-import Database from "better-sqlite3"
+// lib/db/index.ts
+
+import { drizzle } from "drizzle-orm/neon-http"
+import { neon } from "@neondatabase/serverless"
 import * as schema from "./schema"
-import path from "path"
-import { db } from "../database"
-import { getDatabase as getDb } from "../database"
+import bcrypt from "bcryptjs"
 
-// Create database file path
-const dbPath = path.join(process.cwd(), "bright-orion.db")
+// Create Neon SQL client
+const sql = neon(process.env.DATABASE_URL!)
+export const db = drizzle(sql, { schema })
 
-// Initialize SQLite database
-const sqlite = new Database(dbPath)
-
-// Enable foreign keys and WAL mode for better performance
-sqlite.pragma("foreign_keys = ON")
-sqlite.pragma("journal_mode = WAL")
-
-// Create Drizzle instance
-// export const db = drizzle(sqlite, { schema })
-
-// Test database connection
-export function testConnection() {
+// Test DB connection
+export async function testConnection() {
   try {
-    const result = sqlite.prepare("SELECT 1 as test").get()
-    console.log("✅ Database connected successfully!")
+    const result = await sql`SELECT 1`
+    console.log("✅ Connected to Neon DB")
     return true
   } catch (error) {
-    console.error("❌ Database connection failed:", error)
+    console.error("❌ DB connection failed:", error)
     return false
   }
 }
 
-// Initialize database with admin user and settings
+// Initialize database
 export async function initializeDatabase() {
   try {
     console.log("🔄 Initializing database...")
 
-    // Test connection first
-    if (!testConnection()) {
-      throw new Error("Database connection failed")
-    }
+    const connected = await testConnection()
+    if (!connected) throw new Error("DB connection failed")
 
-    // Check if admin user exists
+    // Create admin user if not exists
     const adminExists = await db.query.users.findFirst({
       where: (users, { eq }) => eq(users.email, process.env.ADMIN_EMAIL || "admin@brightorian.com"),
     })
 
     if (!adminExists) {
-      console.log("Creating admin user...")
-      const bcrypt = await import("bcryptjs")
+      console.log("🛠️ Creating admin user...")
       const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || "admin123", 12)
 
-      // Create admin user
       await db.insert(schema.users).values({
         memberId: "BO000001",
         firstName: "Admin",
@@ -65,11 +53,9 @@ export async function initializeDatabase() {
       console.log("✅ Admin user created")
     }
 
-    // Check if system settings exist
+    // Create system settings if not exist
     const settingsExist = await db.query.systemSettings.findFirst()
-
     if (!settingsExist) {
-      console.log("Creating system settings...")
       const settings = [
         { settingKey: "package_price", settingValue: "36000" },
         { settingKey: "min_withdrawal", settingValue: "5000" },
@@ -90,19 +76,12 @@ export async function initializeDatabase() {
       console.log("✅ System settings created")
     }
 
-    console.log("✅ Database initialization complete!")
+    console.log("✅ DB initialization complete")
     return true
   } catch (error) {
-    console.error("❌ Database initialization failed:", error)
+    console.error("❌ Failed to initialize database:", error)
     throw error
   }
 }
 
-// Export schema for use in other files
 export * from "./schema"
-
-// Re-export everything from the main database module
-export * from "../database"
-
-// Compatibility exports
-export const getDatabase = getDb

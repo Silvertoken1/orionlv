@@ -1,22 +1,18 @@
+// app/api/init-production/route.ts
+
 import { type NextRequest, NextResponse } from "next/server"
-import { createTables, seedDatabase } from "@/lib/db/neon"
+import { initializeDatabase } from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Simple authorization check
     if (body.authorization !== process.env.INIT_SECRET) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     console.log("🚀 Initializing production database...")
-
-    // Create tables
-    await createTables()
-
-    // Seed with sample data
-    await seedDatabase()
+    await initializeDatabase()
 
     return NextResponse.json({
       success: true,
