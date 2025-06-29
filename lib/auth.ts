@@ -1,74 +1,63 @@
 import jwt from "jsonwebtoken"
 import type { NextRequest } from "next/server"
-import { findUserById } from "@/lib/db/neon"
+import { findUserById } from "./database"
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-minimum-32-characters"
+const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this-in-production"
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d"
 
-export interface JWTPayload {
+export interface TokenPayload {
   userId: string
   email: string
-  isAdmin: boolean
-  iat?: number
-  exp?: number
+  role: "admin" | "user"
 }
 
-export const signToken = (payload: Omit<JWTPayload, "iat" | "exp">): string => {
+export function generateToken(payload: TokenPayload): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
 }
 
-export const verifyToken = (token: string): JWTPayload | null => {
+export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload
+    return jwt.verify(token, JWT_SECRET) as TokenPayload
   } catch (error) {
-    console.error("Token verification failed:", error)
     return null
   }
 }
 
-export const getTokenFromRequest = (request: NextRequest): string | null => {
-  // Try to get token from Authorization header
+export function getTokenFromRequest(request: NextRequest): string | null {
   const authHeader = request.headers.get("authorization")
   if (authHeader && authHeader.startsWith("Bearer ")) {
     return authHeader.substring(7)
   }
 
-  // Try to get token from cookies
-  const tokenFromCookie = request.cookies.get("auth-token")?.value
-  if (tokenFromCookie) {
-    return tokenFromCookie
-  }
-
-  return null
+  const cookieToken = request.cookies.get("auth-token")
+  return cookieToken?.value || null
 }
 
-export const getCurrentUser = async (request: NextRequest) => {
+export async function requireAuth(request: NextRequest) {
   const token = getTokenFromRequest(request)
   if (!token) {
-    return null
+    throw new Error("Authentication required")
   }
 
   const payload = verifyToken(token)
   if (!payload) {
-    return null
+    throw new Error("Invalid token")
   }
 
-  const user = await findUserById(payload.userId)
-  return user
-}
-
-export const requireAuth = async (request: NextRequest) => {
-  const user = await getCurrentUser(request)
+  const user = findUserById(payload.userId)
   if (!user) {
-    throw new Error("Authentication required")
+    throw new Error("User not found")
   }
-  return user
+
+  return { user, payload }
 }
 
-export const requireAdmin = async (request: NextRequest) => {
-  const user = await requireAuth(request)
-  if (!user.is_admin) {
+export async function requireAdmin(request: NextRequest) {
+  const { user, payload } = await requireAuth(request)
+
+  if (user.role !== "admin") {
     throw new Error("Admin access required")
   }
-  return user
+
+  return { user, payload }
 }
