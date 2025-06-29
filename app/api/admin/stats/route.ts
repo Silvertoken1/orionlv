@@ -1,28 +1,31 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { getStats } from "@/lib/database"
-import { getTokenFromRequest, verifyToken } from "@/lib/auth"
+// This ensures Next.js treats this route as dynamic (due to request headers usage)
+export const dynamic = "force-dynamic";
 
-export const dynamic = "force-dynamic"
+import { type NextRequest, NextResponse } from "next/server";
+import { getStats } from "@/lib/database";
+import { getTokenFromRequest, verifyToken } from "@/lib/auth";
 
+// GET: Retrieve site/admin stats (Admin-only)
 export async function GET(request: NextRequest) {
   try {
-    // Get token from request
-    const token = getTokenFromRequest(request)
+    // Extract token from request headers or cookies
+    const token = getTokenFromRequest(request);
     if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify token
-    const decoded = verifyToken(token)
+    // Decode and validate token
+    const decoded = verifyToken(token);
     if (!decoded || !decoded.isAdmin) {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 })
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
-    const stats = await getStats()
+    // Fetch stats from database
+    const stats = await getStats();
 
-    return NextResponse.json({ stats })
+    return NextResponse.json({ stats });
   } catch (error) {
-    console.error("Get stats error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Get stats error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
